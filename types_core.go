@@ -1,0 +1,100 @@
+package oaipmh
+
+import "encoding/xml"
+
+type MetadataFormat struct {
+	XMLName           xml.Name `xml:"metadataFormat"`
+	MetadataPrefix    string   `xml:"metadataPrefix"`
+	Schema            string   `xml:"schema"`
+	MetadataNamespace string   `xml:"metadataNamespace"`
+}
+
+type InterpretedRequest struct {
+	XMLName xml.Name `xml:"request"`
+	BaseURL string   `xml:",chardata"`
+	Verb    string   `xml:"verb,attr"`
+}
+
+type ResponseError struct {
+	XMLName xml.Name `xml:"error"`
+	Message string   `xml:",chardata"`
+	Code    string   `xml:"code,attr"`
+}
+
+type ListMetadataFormatsResponse struct {
+	XMLName            xml.Name           `xml:"OAI-PMH"`
+	InterpretedRequest InterpretedRequest `xml:"request"`
+	Error              ResponseError      `xml:"error"`
+	ResponseDate       string             `xml:"responseDate"`
+	MetadataFormats    []MetadataFormat   `xml:"ListMetadataFormats>metadataFormat"`
+}
+
+type Identify struct {
+	XMLName           xml.Name `xml:"Identify"`
+	RepositoryName    string   `xml:"repositoryName"`
+	BaseURL           string   `xml:"baseURL"`
+	ProtocolVersion   string   `xml:"protocolVersion"`
+	EarliestDatestamp string   `xml:"earliestDatestamp"`
+	DeletedRecord     string   `xml:"deletedRecord"`
+	Granularity       string   `xml:"granularity"`
+	AdminEmail        string   `xml:"adminEmail"`
+	Compression       string   `xml:"compression"`
+}
+
+type IdentifyResponse struct {
+	XMLName            xml.Name           `xml:"OAI-PMH"`
+	InterpretedRequest InterpretedRequest `xml:"request"`
+	Error              ResponseError      `xml:"error"`
+	ResponseDate       string             `xml:"responseDate"`
+	Identify           Identify           `xml:"Identify"`
+}
+
+type SetSpec struct {
+	XMLName xml.Name `xml:"setSpec"`
+	Set     string   `xml:",chardata"`
+}
+
+type RecordHeader struct {
+	XMLName    xml.Name  `xml:"header"`
+	Identifier string    `xml:"identifier"`
+	Datestamp  string    `xml:"datestamp"`
+	SetSpec    []SetSpec `xml:"setSpec"`
+	Status     string    `xml:"status"`
+}
+
+type Record struct {
+	XMLName  xml.Name     `xml:"record"`
+	Header   RecordHeader `xml:"header"`
+	Metadata Metadata     `xml:"metadata"`
+}
+
+type Metadata struct {
+	Raw []byte `xml:",innerxml"`
+}
+
+type GetRecordResponse struct {
+	XMLName            xml.Name           `xml:"OAI-PMH"`
+	InterpretedRequest InterpretedRequest `xml:"request"`
+	Error              ResponseError      `xml:"error"`
+	Record             Record             `xml:"GetRecord>record"`
+}
+
+type ListRecordsResponse struct {
+	XMLName            xml.Name           `xml:"OAI-PMH"`
+	InterpretedRequest InterpretedRequest `xml:"request"`
+	Error              ResponseError      `xml:"error"`
+	Records            Records            `xml:"ListRecords>record"`
+	ResumptionToken    ResumptionToken    `xml:"ListRecords>resumptionToken"`
+}
+
+type Records struct {
+	XMLName  xml.Name     `xml:"record"`
+	Header   RecordHeader `xml:"header"`
+	Metadata []Metadata   `xml:"metadata"`
+}
+
+type ResumptionToken struct {
+	XMLName        xml.Name `xml:"resumptionToken"`
+	ExpirationDate string   `xml:"expirationDate,attr"`
+	Value          string   `xml:",chardata"`
+}
