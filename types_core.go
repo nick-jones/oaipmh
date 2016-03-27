@@ -1,6 +1,9 @@
 package oaipmh
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+	"time"
+)
 
 type MetadataFormat struct {
 	XMLName           xml.Name `xml:"metadataFormat"`
@@ -19,6 +22,10 @@ type ResponseError struct {
 	XMLName xml.Name `xml:"error"`
 	Message string   `xml:",chardata"`
 	Code    string   `xml:"code,attr"`
+}
+
+type ListMetadataFormatsOptions struct {
+	Identifier string
 }
 
 type ListMetadataFormatsResponse struct {
@@ -72,6 +79,11 @@ type Metadata struct {
 	Raw []byte `xml:",innerxml"`
 }
 
+type GetRecordOptions struct {
+	Identifier     string
+	MetadataPrefix string
+}
+
 type GetRecordResponse struct {
 	XMLName            xml.Name           `xml:"OAI-PMH"`
 	InterpretedRequest InterpretedRequest `xml:"request"`
@@ -79,18 +91,20 @@ type GetRecordResponse struct {
 	Record             Record             `xml:"GetRecord>record"`
 }
 
+type ListRecordsOptions struct {
+	MetadataPrefix  string
+	From            time.Time
+	Until           time.Time
+	Set             string
+	ResumptionToken string
+}
+
 type ListRecordsResponse struct {
 	XMLName            xml.Name           `xml:"OAI-PMH"`
 	InterpretedRequest InterpretedRequest `xml:"request"`
 	Error              ResponseError      `xml:"error"`
-	Records            Records            `xml:"ListRecords>record"`
+	Records            []Record           `xml:"ListRecords>record"`
 	ResumptionToken    ResumptionToken    `xml:"ListRecords>resumptionToken"`
-}
-
-type Records struct {
-	XMLName  xml.Name     `xml:"record"`
-	Header   RecordHeader `xml:"header"`
-	Metadata []Metadata   `xml:"metadata"`
 }
 
 type ResumptionToken struct {

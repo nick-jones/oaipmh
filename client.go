@@ -22,39 +22,37 @@ func NewClient(baseURL string) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) ListMetadataFormats(identifier string) (*ListMetadataFormatsResponse, error) {
-	options := map[string]string{
-		"identifier": identifier,
-	}
+func (c *Client) ListMetadataFormats(request *ListMetadataFormatsOptions) (*ListMetadataFormatsResponse, error) {
+	params := prepareUrlValues("ListMetadataFormats", map[string]string{
+		"identifier": request.Identifier,
+	})
 
-	params := c.prepareUrlValues("ListMetadataFormats", options)
 	response := new(ListMetadataFormatsResponse)
 
 	if err := c.fetchXML(params, response); err != nil {
 		return response, err
 	}
 
-	return response, c.errorFromResponse(response.Error)
+	return response, errorFromResponse(response.Error)
 }
 
 func (c *Client) Identify() (*IdentifyResponse, error) {
-	params := c.prepareUrlValues("Identify", map[string]string{})
+	params := prepareUrlValues("Identify", map[string]string{})
 	response := new(IdentifyResponse)
 
 	if err := c.fetchXML(params, response); err != nil {
 		return response, err
 	}
 
-	return response, c.errorFromResponse(response.Error)
+	return response, errorFromResponse(response.Error)
 }
 
-func (c *Client) GetRecord(record interface{}, identifier string, metadataPrefix string) (*GetRecordResponse, error) {
-	options := map[string]string{
-		"identifier":     identifier,
-		"metadataPrefix": metadataPrefix,
-	}
+func (c *Client) GetRecord(record interface{}, request *GetRecordOptions) (*GetRecordResponse, error) {
+	params := prepareUrlValues("GetRecord", map[string]string{
+		"identifier":     request.Identifier,
+		"metadataPrefix": request.MetadataPrefix,
+	})
 
-	params := c.prepareUrlValues("GetRecord", options)
 	response := new(GetRecordResponse)
 	data, err := c.fetch(params)
 
@@ -66,21 +64,11 @@ func (c *Client) GetRecord(record interface{}, identifier string, metadataPrefix
 		return response, err
 	}
 
-	if err = c.unmarshalRecord(response.Record, record); err != nil {
+	if err = errorFromResponse(response.Error); err != nil {
 		return response, err
 	}
 
-	return response, c.errorFromResponse(response.Error)
-}
-
-func (c *Client) unmarshalRecord(record Record, into interface{}) error {
-	typ := reflect.TypeOf(into).Elem()
-
-	if typ.Kind() != reflect.Struct {
-		return errors.New("Non-struct provided")
-	}
-
-	return xml.Unmarshal(record.Metadata.Raw, into)
+	return response, unmarshalRecord(response.Record, record)
 }
 
 func (c *Client) fetch(params url.Values) ([]byte, error) {
@@ -107,7 +95,17 @@ func (c *Client) fetchXML(params url.Values, response interface{}) error {
 	return xml.Unmarshal(res, response)
 }
 
-func (c *Client) prepareUrlValues(verb string, options map[string]string) url.Values {
+func unmarshalRecord(record Record, into interface{}) error {
+	typ := reflect.TypeOf(into).Elem()
+
+	if typ.Kind() != reflect.Struct {
+		return errors.New("Non-struct provided")
+	}
+
+	return xml.Unmarshal(record.Metadata.Raw, into)
+}
+
+func prepareUrlValues(verb string, options map[string]string) url.Values {
 	params := url.Values{}
 	params.Add("verb", verb)
 
@@ -120,9 +118,9 @@ func (c *Client) prepareUrlValues(verb string, options map[string]string) url.Va
 	return params
 }
 
-func (c *Client) errorFromResponse(responseError ResponseError) error {
+func errorFromResponse(responseError ResponseError) error {
 	if responseError.Code != "" || responseError.Message != "" {
-		return errors.New("Error indicated by endpoint")
+		return fmt.Errorf("API error: %s (%s)", responseError.Message, responseError.Code)
 	}
 
 	return nil

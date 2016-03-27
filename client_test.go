@@ -65,7 +65,8 @@ func (s *S) TestListMetadataFormats(c *C) {
 	`)
 
 	defer server.Close()
-	response, err := client.ListMetadataFormats("")
+	request := &ListMetadataFormatsOptions{}
+	response, err := client.ListMetadataFormats(request)
 
 	expected := &ListMetadataFormatsResponse{
 		XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "OAI-PMH"},
@@ -107,7 +108,8 @@ func (s *S) TestListMetadataFormatsWithErrorResponse(c *C) {
 	`)
 
 	defer server.Close()
-	response, err := client.ListMetadataFormats("x")
+	request := &ListMetadataFormatsOptions{"x"}
+	response, err := client.ListMetadataFormats(request)
 
 	expected := &ListMetadataFormatsResponse{
 		XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "OAI-PMH"},
@@ -260,7 +262,8 @@ func (s *S) TestGetRecord(c *C) {
 	defer server.Close()
 
 	record := new(DublinCoreRecord)
-	response, err := client.GetRecord(record, "oai:eprints.ecs.soton.ac.uk:1", "oai_dc")
+	request := &GetRecordOptions{"oai:eprints.ecs.soton.ac.uk:1", "oai_dc"}
+	response, err := client.GetRecord(record, request)
 
 	expectedResponse := &GetRecordResponse{
 		XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "OAI-PMH"},
@@ -350,7 +353,8 @@ func (s *S) TestGetRecordWithErrorResponse(c *C) {
 	defer server.Close()
 
 	record := new(DublinCoreRecord)
-	response, err := client.GetRecord(record, "oai:eprints.ecs.soton.ac.uk:99999", "oai_dc")
+	request := &GetRecordOptions{"oai:eprints.ecs.soton.ac.uk:99999", "oai_dc"}
+	response, err := client.GetRecord(record, request)
 
 	expectedResponse := &GetRecordResponse{
 		XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "OAI-PMH"},
@@ -367,7 +371,7 @@ func (s *S) TestGetRecordWithErrorResponse(c *C) {
 		Record: Record{},
 	}
 
-	expectedRecord := new(DublinCoreRecord)
+	expectedRecord := &DublinCoreRecord{}
 
 	c.Assert(err, NotNil)
 	c.Assert(response, DeepEquals, expectedResponse)
