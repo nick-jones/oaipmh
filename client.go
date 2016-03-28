@@ -1,14 +1,20 @@
 package oaipmh
 
 import (
-	"encoding/xml"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"reflect"
+	"time"
 )
+
+const formatISO8601 string = "%04d-%02d-%02dT%02d:%02d:%02dZ"
+
+type HTTPResponse struct {
+	StatusCode int
+	Raw        []byte
+}
 
 type Client struct {
 	baseURL string
@@ -22,90 +28,91 @@ func NewClient(baseURL string) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) ListMetadataFormats(request *ListMetadataFormatsOptions) (*ListMetadataFormatsResponse, error) {
-	params := prepareUrlValues("ListMetadataFormats", map[string]string{
+func (c *Client) ListMetadataFormats(request *ListMetadataFormatsOptions) (*ListMetadataFormatsResponse, *HTTPResponse, error) {
+	params := prepareParameters("ListMetadataFormats", map[string]string{
 		"identifier": request.Identifier,
 	})
 
 	response := new(ListMetadataFormatsResponse)
+	httpResponse, err := c.fetchXML(params, response)
 
-	if err := c.fetchXML(params, response); err != nil {
-		return response, err
-	}
-
-	return response, errorFromResponse(response.Error)
+	return response, httpResponse, err
 }
 
-func (c *Client) Identify() (*IdentifyResponse, error) {
-	params := prepareUrlValues("Identify", map[string]string{})
+func (c *Client) Identify() (*IdentifyResponse, *HTTPResponse, error) {
+	params := prepareParameters("Identify", map[string]string{})
 	response := new(IdentifyResponse)
+	httpResponse, err := c.fetchXML(params, response)
 
-	if err := c.fetchXML(params, response); err != nil {
-		return response, err
-	}
-
-	return response, errorFromResponse(response.Error)
+	return response, httpResponse, err
 }
 
-func (c *Client) GetRecord(record interface{}, request *GetRecordOptions) (*GetRecordResponse, error) {
-	params := prepareUrlValues("GetRecord", map[string]string{
+func (c *Client) GetRecord(request *GetRecordOptions, record interface{}) (*GetRecordResponse, *HTTPResponse, error) {
+	params := prepareParameters("GetRecord", map[string]string{
 		"identifier":     request.Identifier,
 		"metadataPrefix": request.MetadataPrefix,
 	})
 
 	response := new(GetRecordResponse)
-	data, err := c.fetch(params)
+	httpResponse, err := c.fetchXML(params, response)
 
 	if err != nil {
-		return response, err
+		return response, httpResponse, err
 	}
 
-	if err = xml.Unmarshal(data, response); err != nil {
-		return response, err
-	}
-
-	if err = errorFromResponse(response.Error); err != nil {
-		return response, err
-	}
-
-	return response, unmarshalRecord(response.Record, record)
+	return response, httpResponse, unmarshalRecord(response.Record, record)
 }
 
-func (c *Client) fetch(params url.Values) ([]byte, error) {
+func (c *Client) ListRecords(request *ListRecordsOptions, records interface{}) (*ListRecordsResponse, *HTTPResponse, error) {
+	params := prepareParameters("ListRecords", map[string]string{
+		"metadataPrefix":  request.MetadataPrefix,
+		"from":            formatDateTime(request.From),
+		"until":           formatDateTime(request.Until),
+		"set":             request.Set,
+		"resumptionToken": request.ResumptionToken,
+	})
+
+	response := new(ListRecordsResponse)
+	httpResponse, err := c.fetchXML(params, response)
+
+	if err != nil {
+		return response, httpResponse, err
+	}
+
+	return response, httpResponse, unmarshalRecords(response.Records, records)
+}
+
+func (c *Client) fetch(params url.Values) (*HTTPResponse, error) {
 	query := params.Encode()
 	path := fmt.Sprintf("%s?%s", c.baseURL, query)
 	res, err := c.http.Get(path)
+
+	if err != nil {
+		return &HTTPResponse{}, err
+	}
+
 	defer res.Body.Close()
 	contents, err := ioutil.ReadAll(res.Body)
+	httpResponse := &HTTPResponse{res.StatusCode, contents}
 
-	if res.StatusCode >= 400 {
+	if httpResponse.StatusCode >= 400 {
 		err = errors.New("Unsuccessful request")
 	}
 
-	return contents, err
+	return httpResponse, err
 }
 
-func (c *Client) fetchXML(params url.Values, response interface{}) error {
-	res, err := c.fetch(params)
+func (c *Client) fetchXML(params url.Values, into interface{}) (*HTTPResponse, error) {
+	httpResponse, err := c.fetch(params)
 
 	if err != nil {
-		return err
+		return httpResponse, err
 	}
 
-	return xml.Unmarshal(res, response)
+	return httpResponse, unmarshalResponse(httpResponse.Raw, into)
 }
 
-func unmarshalRecord(record Record, into interface{}) error {
-	typ := reflect.TypeOf(into).Elem()
-
-	if typ.Kind() != reflect.Struct {
-		return errors.New("Non-struct provided")
-	}
-
-	return xml.Unmarshal(record.Metadata.Raw, into)
-}
-
-func prepareUrlValues(verb string, options map[string]string) url.Values {
+func prepareParameters(verb string, options map[string]string) url.Values {
 	params := url.Values{}
 	params.Add("verb", verb)
 
@@ -118,10 +125,10 @@ func prepareUrlValues(verb string, options map[string]string) url.Values {
 	return params
 }
 
-func errorFromResponse(responseError ResponseError) error {
-	if responseError.Code != "" || responseError.Message != "" {
-		return fmt.Errorf("API error: %s (%s)", responseError.Message, responseError.Code)
+func formatDateTime(t time.Time) string {
+	if t.IsZero() {
+		return ""
 	}
 
-	return nil
+	return fmt.Sprintf(formatISO8601, t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
 }

@@ -5,6 +5,17 @@ import (
 	"time"
 )
 
+type ResponseError struct {
+	XMLName xml.Name `xml:"OAI-PMH"`
+	Error   Error    `xml:"error"`
+}
+
+type Error struct {
+	XMLName xml.Name `xml:"error"`
+	Message string   `xml:",chardata"`
+	Code    string   `xml:"code,attr"`
+}
+
 type MetadataFormat struct {
 	XMLName           xml.Name `xml:"metadataFormat"`
 	MetadataPrefix    string   `xml:"metadataPrefix"`
@@ -18,12 +29,6 @@ type InterpretedRequest struct {
 	Verb    string   `xml:"verb,attr"`
 }
 
-type ResponseError struct {
-	XMLName xml.Name `xml:"error"`
-	Message string   `xml:",chardata"`
-	Code    string   `xml:"code,attr"`
-}
-
 type ListMetadataFormatsOptions struct {
 	Identifier string
 }
@@ -31,7 +36,6 @@ type ListMetadataFormatsOptions struct {
 type ListMetadataFormatsResponse struct {
 	XMLName            xml.Name           `xml:"OAI-PMH"`
 	InterpretedRequest InterpretedRequest `xml:"request"`
-	Error              ResponseError      `xml:"error"`
 	ResponseDate       string             `xml:"responseDate"`
 	MetadataFormats    []MetadataFormat   `xml:"ListMetadataFormats>metadataFormat"`
 }
@@ -51,7 +55,6 @@ type Identify struct {
 type IdentifyResponse struct {
 	XMLName            xml.Name           `xml:"OAI-PMH"`
 	InterpretedRequest InterpretedRequest `xml:"request"`
-	Error              ResponseError      `xml:"error"`
 	ResponseDate       string             `xml:"responseDate"`
 	Identify           Identify           `xml:"Identify"`
 }
@@ -87,7 +90,6 @@ type GetRecordOptions struct {
 type GetRecordResponse struct {
 	XMLName            xml.Name           `xml:"OAI-PMH"`
 	InterpretedRequest InterpretedRequest `xml:"request"`
-	Error              ResponseError      `xml:"error"`
 	Record             Record             `xml:"GetRecord>record"`
 }
 
@@ -102,7 +104,6 @@ type ListRecordsOptions struct {
 type ListRecordsResponse struct {
 	XMLName            xml.Name           `xml:"OAI-PMH"`
 	InterpretedRequest InterpretedRequest `xml:"request"`
-	Error              ResponseError      `xml:"error"`
 	Records            []Record           `xml:"ListRecords>record"`
 	ResumptionToken    ResumptionToken    `xml:"ListRecords>resumptionToken"`
 }
