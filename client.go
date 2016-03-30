@@ -1,26 +1,26 @@
 package oaipmh
 
 import (
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"time"
 	"reflect"
-	"encoding/xml"
+	"time"
 )
 
 const formatISO8601 string = "%04d-%02d-%02dT%02d:%02d:%02dZ"
 
-type HTTPResponse struct {
-	StatusCode int
-	Raw        []byte
-}
-
 type Client struct {
 	baseURL string
 	http    *http.Client
+}
+
+type HTTPResponse struct {
+	StatusCode int
+	Raw        []byte
 }
 
 func NewClient(baseURL string) (*Client, error) {
