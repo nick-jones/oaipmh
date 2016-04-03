@@ -113,3 +113,10 @@ type ResumptionToken struct {
 	ExpirationDate string   `xml:"expirationDate,attr"`
 	Value          string   `xml:",chardata"`
 }
+
+type ListIdentifiersResponse struct {
+	XMLName            xml.Name           `xml:"OAI-PMH"`
+	InterpretedRequest InterpretedRequest `xml:"request"`
+	Headers            []RecordHeader     `xml:"ListIdentifiers>header"`
+	ResumptionToken    ResumptionToken    `xml:"ListIdentifiers>resumptionToken"`
+}

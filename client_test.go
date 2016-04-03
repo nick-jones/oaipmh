@@ -60,7 +60,6 @@ func (s *clientSuite) TestListMetadataFormats(c *C) {
 </OAI-PMH>`
 
 	server, client := mockClient(200, raw)
-
 	defer server.Close()
 	request := &ListMetadataFormatsOptions{}
 	metadataFormats, _, err := client.ListMetadataFormats(request)
@@ -103,7 +102,6 @@ func (s *clientSuite) TestListMetadataFormatsWithErrorResponse(c *C) {
 </OAI-PMH>`
 
 	server, client := mockClient(200, raw)
-
 	defer server.Close()
 	request := &ListMetadataFormatsOptions{"x"}
 	metadataFormats, _, err := client.ListMetadataFormats(request)
@@ -151,7 +149,6 @@ func (s *clientSuite) TestIdentify(c *C) {
 </OAI-PMH>`
 
 	server, client := mockClient(200, raw)
-
 	defer server.Close()
 	identity, _, err := client.Identify()
 
@@ -191,7 +188,6 @@ func (s *clientSuite) TestIdentifyWithErrorResponse(c *C) {
 </OAI-PMH>`
 
 	server, client := mockClient(200, raw)
-
 	defer server.Close()
 	identity, _, err := client.Identify()
 
@@ -337,7 +333,6 @@ func (s *clientSuite) TestGetRecordWithErrorResponse(c *C) {
 </OAI-PMH>`
 
 	server, client := mockClient(200, raw)
-
 	defer server.Close()
 	metadata := new(DublinCoreRecord)
 	request := &GetRecordOptions{"oai:eprints.ecs.soton.ac.uk:99999", "oai_dc"}
@@ -487,7 +482,6 @@ func (s *clientSuite) TestListRecordsWithErrorResponse(c *C) {
 </OAI-PMH>`
 
 	server, client := mockClient(200, raw)
-
 	defer server.Close()
 	metadatas := new(DublinCoreRecords)
 	request := &ListOptions{"oai_dd", time.Time{}, time.Time{}, "", ""}
@@ -511,4 +505,92 @@ func (s *clientSuite) TestListRecordsWithErrorResponse(c *C) {
 	c.Assert(err, NotNil)
 	c.Assert(records, DeepEquals, expectedRecords)
 	c.Assert(metadatas, DeepEquals, expectedMetadatas)
+}
+
+func (s *clientSuite) TestListIdentifiers(c *C) {
+	raw := `
+<?xml version='1.0' encoding='UTF-8'?>
+<?xml-stylesheet type='text/xsl' href='/oai2.xsl' ?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+  <responseDate>2016-04-03T12:10:55Z</responseDate>
+  <request verb="ListIdentifiers" metadataPrefix="oai_dc">http://eprints.ecs.soton.ac.uk/cgi/oai2</request>
+  <ListIdentifiers>
+    <header>
+      <identifier>oai:eprints.ecs.soton.ac.uk:1</identifier>
+      <datestamp>2011-09-23T10:22:12Z</datestamp>
+      <setSpec>747970653D636F6E666572656E63655F6974656D</setSpec>
+      <setSpec>66756C6C746578743D46414C5345</setSpec></header>
+    <resumptionToken expirationDate="2016-04-04T12:10:55Z">metadataPrefix%3Doai_dc%26offset%3D101</resumptionToken>
+  </ListIdentifiers>
+</OAI-PMH>`
+
+	server, client := mockClient(200, raw)
+	defer server.Close()
+	options := &ListOptions{"oai_dc", time.Time{}, time.Time{}, "", ""}
+	identifiers, _, err := client.ListIdentifiers(options)
+
+	expectedIdentifiers := &ListIdentifiersResponse{
+		XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "OAI-PMH"},
+		InterpretedRequest: InterpretedRequest{
+			XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "request"},
+			BaseURL: "http://eprints.ecs.soton.ac.uk/cgi/oai2",
+			Verb:    "ListIdentifiers",
+		},
+		Headers: []RecordHeader{
+			RecordHeader{
+				XMLName:    xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "header"},
+				Identifier: "oai:eprints.ecs.soton.ac.uk:1",
+				Datestamp:  "2011-09-23T10:22:12Z",
+				SetSpec: []SetSpec{
+					SetSpec{
+						XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "setSpec"},
+						Set:     "747970653D636F6E666572656E63655F6974656D",
+					},
+					SetSpec{
+						XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "setSpec"},
+						Set:     "66756C6C746578743D46414C5345",
+					},
+				},
+				Status: "",
+			},
+		},
+		ResumptionToken: ResumptionToken{
+			XMLName:        xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "resumptionToken"},
+			ExpirationDate: "2016-04-04T12:10:55Z",
+			Value:          "metadataPrefix%3Doai_dc%26offset%3D101",
+		},
+	}
+
+	c.Assert(err, IsNil)
+	c.Assert(identifiers, DeepEquals, expectedIdentifiers)
+}
+
+func (s *clientSuite) TestListIdentifiersWithErrorResponse(c *C) {
+	raw := `
+<?xml version='1.0' encoding='UTF-8'?>
+<?xml-stylesheet type='text/xsl' href='/oai2.xsl' ?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+  <responseDate>2016-04-03T12:27:41Z</responseDate>
+  <request>http://eprints.ecs.soton.ac.uk/cgi/oai2</request>
+  <error code="cannotDisseminateFormat">Record not available as metadata type: 'oai_dd'</error>
+</OAI-PMH>`
+
+	server, client := mockClient(200, raw)
+	defer server.Close()
+	options := &ListOptions{"oai_dd", time.Time{}, time.Time{}, "", ""}
+	identifiers, _, err := client.ListIdentifiers(options)
+
+	expectedIdentifiers := &ListIdentifiersResponse{
+		XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "OAI-PMH"},
+		InterpretedRequest: InterpretedRequest{
+			XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "request"},
+			BaseURL: "http://eprints.ecs.soton.ac.uk/cgi/oai2",
+			Verb:    "",
+		},
+		Headers:         []RecordHeader(nil),
+		ResumptionToken: ResumptionToken{},
+	}
+
+	c.Assert(err, NotNil)
+	c.Assert(identifiers, DeepEquals, expectedIdentifiers)
 }

@@ -84,6 +84,21 @@ func (c *Client) ListRecords(request *ListOptions, records interface{}) (*ListRe
 	return response, httpResponse, unmarshalRecords(response.Records, records)
 }
 
+func (c *Client) ListIdentifiers(request *ListOptions) (*ListIdentifiersResponse, *HTTPResponse, error) {
+	params := prepareParameters("ListIdentifiers", map[string]string{
+		"metadataPrefix":  request.MetadataPrefix,
+		"from":            formatDateTime(request.From),
+		"until":           formatDateTime(request.Until),
+		"set":             request.Set,
+		"resumptionToken": request.ResumptionToken,
+	})
+
+	response := new(ListIdentifiersResponse)
+	httpResponse, err := c.fetchXML(params, response)
+
+	return response, httpResponse, err
+}
+
 func (c *Client) fetch(params url.Values) (*HTTPResponse, error) {
 	query := params.Encode()
 	path := fmt.Sprintf("%s?%s", c.baseURL, query)
