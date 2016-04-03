@@ -93,7 +93,7 @@ type GetRecordResponse struct {
 	Record             Record             `xml:"GetRecord>record"`
 }
 
-type ListRecordsOptions struct {
+type ListOptions struct {
 	MetadataPrefix  string
 	From            time.Time
 	Until           time.Time

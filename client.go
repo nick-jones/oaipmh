@@ -65,7 +65,7 @@ func (c *Client) GetRecord(request *GetRecordOptions, record interface{}) (*GetR
 	return response, httpResponse, unmarshalRecord(response.Record, record)
 }
 
-func (c *Client) ListRecords(request *ListRecordsOptions, records interface{}) (*ListRecordsResponse, *HTTPResponse, error) {
+func (c *Client) ListRecords(request *ListOptions, records interface{}) (*ListRecordsResponse, *HTTPResponse, error) {
 	params := prepareParameters("ListRecords", map[string]string{
 		"metadataPrefix":  request.MetadataPrefix,
 		"from":            formatDateTime(request.From),

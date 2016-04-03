@@ -395,8 +395,8 @@ func (s *clientSuite) TestListRecords(c *C) {
 
 	defer server.Close()
 	metadatas := new(DublinCoreRecords)
-	request := &ListRecordsOptions{"oai_dc", time.Time{}, time.Time{}, "", ""}
-	records, _, err := client.ListRecords(request, metadatas)
+	options := &ListOptions{"oai_dc", time.Time{}, time.Time{}, "", ""}
+	records, _, err := client.ListRecords(options, metadatas)
 
 	expectedRecords := &ListRecordsResponse{
 		XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "OAI-PMH"},
@@ -490,7 +490,7 @@ func (s *clientSuite) TestListRecordsWithErrorResponse(c *C) {
 
 	defer server.Close()
 	metadatas := new(DublinCoreRecords)
-	request := &ListRecordsOptions{"oai_dd", time.Time{}, time.Time{}, "", ""}
+	request := &ListOptions{"oai_dd", time.Time{}, time.Time{}, "", ""}
 	records, _, err := client.ListRecords(request, metadatas)
 
 	expectedRecords := &ListRecordsResponse{

@@ -10,13 +10,13 @@ import (
 func main() {
 	baseURL := "http://eprints.ecs.soton.ac.uk/cgi/oai2"
 	client, _ := oaipmh.NewClient(baseURL)
-	options := &oaipmh.ListRecordsOptions{"oai_dc", time.Time{}, time.Time{}, "", ""}
+	options := &oaipmh.ListOptions{"oai_dc", time.Time{}, time.Time{}, "", ""}
 
 	for {
 		records := new(oaipmh.DublinCoreRecords)
 		response, _, err := client.ListRecords(options, records)
 		resumptionToken := response.ResumptionToken.Value
-		options = &oaipmh.ListRecordsOptions{"", time.Time{}, time.Time{}, "", resumptionToken}
+		options = &oaipmh.ListOptions{"", time.Time{}, time.Time{}, "", resumptionToken}
 
 		if err != nil {
 			fmt.Println(err.Error())
