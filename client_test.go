@@ -262,15 +262,9 @@ func (s *clientSuite) TestGetRecord(c *C) {
 				XMLName:    xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "header"},
 				Identifier: "oai:eprints.ecs.soton.ac.uk:1",
 				Datestamp:  "2011-09-23T10:22:12Z",
-				SetSpec: []SetSpec{
-					SetSpec{
-						XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "setSpec"},
-						Set:     "747970653D636F6E666572656E63655F6974656D",
-					},
-					SetSpec{
-						XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "setSpec"},
-						Set:     "66756C6C746578743D46414C5345",
-					},
+				SetSpec: []string{
+					"747970653D636F6E666572656E63655F6974656D",
+					"66756C6C746578743D46414C5345",
 				},
 				Status: "",
 			},
@@ -407,17 +401,10 @@ func (s *clientSuite) TestListRecords(c *C) {
 					XMLName:    xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "header"},
 					Identifier: "oai:eprints.ecs.soton.ac.uk:1",
 					Datestamp:  "2011-09-23T10:22:12Z",
-					SetSpec: []SetSpec{
-						SetSpec{
-							XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "setSpec"},
-							Set:     "747970653D636F6E666572656E63655F6974656D",
-						},
-						SetSpec{
-							XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "setSpec"},
-							Set:     "66756C6C746578743D46414C5345",
-						},
+					SetSpec: []string{
+						"747970653D636F6E666572656E63655F6974656D",
+						"66756C6C746578743D46414C5345",
 					},
-					Status: "",
 				},
 				Metadata: Metadata{
 					Raw: []byte(`
@@ -541,15 +528,9 @@ func (s *clientSuite) TestListIdentifiers(c *C) {
 				XMLName:    xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "header"},
 				Identifier: "oai:eprints.ecs.soton.ac.uk:1",
 				Datestamp:  "2011-09-23T10:22:12Z",
-				SetSpec: []SetSpec{
-					SetSpec{
-						XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "setSpec"},
-						Set:     "747970653D636F6E666572656E63655F6974656D",
-					},
-					SetSpec{
-						XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "setSpec"},
-						Set:     "66756C6C746578743D46414C5345",
-					},
+				SetSpec: []string{
+					"747970653D636F6E666572656E63655F6974656D",
+					"66756C6C746578743D46414C5345",
 				},
 				Status: "",
 			},
@@ -593,4 +574,80 @@ func (s *clientSuite) TestListIdentifiersWithErrorResponse(c *C) {
 
 	c.Assert(err, NotNil)
 	c.Assert(identifiers, DeepEquals, expectedIdentifiers)
+}
+
+func (s *clientSuite) TestListSets(c *C) {
+	raw := `
+<?xml version='1.0' encoding='UTF-8'?>
+<?xml-stylesheet type='text/xsl' href='/oai2.xsl' ?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+  <responseDate>2016-04-06T20:58:20Z</responseDate>
+  <request verb="ListSets">http://eprints.ecs.soton.ac.uk/cgi/oai2</request>
+  <ListSets>
+    <set>
+      <setSpec>7374617475733D696E7072657373</setSpec>
+      <setName>Status = In Press</setName>
+    </set>
+    <resumptionToken expirationDate="2016-04-04T12:10:55Z">sets%3D101</resumptionToken>
+  </ListSets>
+</OAI-PMH>`
+
+	server, client := mockClient(200, raw)
+	defer server.Close()
+	options := &ListSetsOptions{""}
+	sets, _, err := client.ListSets(options)
+
+	expectedSets := &ListSetsResponse{
+		XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "OAI-PMH"},
+		InterpretedRequest: InterpretedRequest{
+			XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "request"},
+			BaseURL: "http://eprints.ecs.soton.ac.uk/cgi/oai2",
+			Verb:    "ListSets",
+		},
+		Sets: []Set{
+			Set{
+				XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "set"},
+				SetSpec: "7374617475733D696E7072657373",
+				SetName: "Status = In Press",
+			},
+		},
+		ResumptionToken: ResumptionToken{
+			XMLName:        xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "resumptionToken"},
+			ExpirationDate: "2016-04-04T12:10:55Z",
+			Value:          "sets%3D101",
+		},
+	}
+
+	c.Assert(err, IsNil)
+	c.Assert(sets, DeepEquals, expectedSets)
+}
+
+func (s *clientSuite) TestListSetsWithErrorResponse(c *C) {
+	raw := `
+<?xml version='1.0' encoding='UTF-8'?>
+<?xml-stylesheet type='text/xsl' href='/oai2.xsl' ?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+  <responseDate>2016-04-06T21:14:28Z</responseDate>
+  <request>http://eprints.ecs.soton.ac.uk/cgi/oai2</request>
+  <error code="badResumptionToken">Resumption Tokens not supported for ListSets</error>
+</OAI-PMH>`
+
+	server, client := mockClient(200, raw)
+	defer server.Close()
+	options := &ListSetsOptions{}
+	sets, _, err := client.ListSets(options)
+
+	expectedSets := &ListSetsResponse{
+		XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "OAI-PMH"},
+		InterpretedRequest: InterpretedRequest{
+			XMLName: xml.Name{Space: "http://www.openarchives.org/OAI/2.0/", Local: "request"},
+			BaseURL: "http://eprints.ecs.soton.ac.uk/cgi/oai2",
+			Verb:    "",
+		},
+		Sets:            []Set(nil),
+		ResumptionToken: ResumptionToken{},
+	}
+
+	c.Assert(err, NotNil)
+	c.Assert(sets, DeepEquals, expectedSets)
 }

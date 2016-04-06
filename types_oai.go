@@ -59,17 +59,12 @@ type IdentifyResponse struct {
 	Identify           Identify           `xml:"Identify"`
 }
 
-type SetSpec struct {
-	XMLName xml.Name `xml:"setSpec"`
-	Set     string   `xml:",chardata"`
-}
-
 type RecordHeader struct {
-	XMLName    xml.Name  `xml:"header"`
-	Identifier string    `xml:"identifier"`
-	Datestamp  string    `xml:"datestamp"`
-	SetSpec    []SetSpec `xml:"setSpec"`
-	Status     string    `xml:"status"`
+	XMLName    xml.Name `xml:"header"`
+	Identifier string   `xml:"identifier"`
+	Datestamp  string   `xml:"datestamp"`
+	SetSpec    []string `xml:"setSpec"`
+	Status     string   `xml:"status"`
 }
 
 type Record struct {
@@ -119,4 +114,21 @@ type ListIdentifiersResponse struct {
 	InterpretedRequest InterpretedRequest `xml:"request"`
 	Headers            []RecordHeader     `xml:"ListIdentifiers>header"`
 	ResumptionToken    ResumptionToken    `xml:"ListIdentifiers>resumptionToken"`
+}
+
+type ListSetsOptions struct {
+	ResumptionToken string
+}
+
+type ListSetsResponse struct {
+	XMLName            xml.Name           `xml:"OAI-PMH"`
+	InterpretedRequest InterpretedRequest `xml:"request"`
+	Sets               []Set              `xml:"ListSets>set"`
+	ResumptionToken    ResumptionToken    `xml:"ListSets>resumptionToken"`
+}
+
+type Set struct {
+	XMLName xml.Name `xml:"set"`
+	SetSpec string   `xml:"setSpec"`
+	SetName string   `xml:"setName"`
 }

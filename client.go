@@ -99,6 +99,17 @@ func (c *Client) ListIdentifiers(options *ListOptions) (*ListIdentifiersResponse
 	return response, httpResponse, err
 }
 
+func (c *Client) ListSets(options *ListSetsOptions) (*ListSetsResponse, *HTTPResponse, error) {
+	params := prepareParameters("ListSets", map[string]string{
+		"resumptionToken": options.ResumptionToken,
+	})
+
+	response := new(ListSetsResponse)
+	httpResponse, err := c.fetchXML(params, response)
+
+	return response, httpResponse, err
+}
+
 func (c *Client) fetch(params url.Values) (*HTTPResponse, error) {
 	query := params.Encode()
 	path := fmt.Sprintf("%s?%s", c.baseURL, query)
