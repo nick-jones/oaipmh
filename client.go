@@ -30,9 +30,9 @@ func NewClient(baseURL string) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) ListMetadataFormats(request *ListMetadataFormatsOptions) (*ListMetadataFormatsResponse, *HTTPResponse, error) {
+func (c *Client) ListMetadataFormats(options *ListMetadataFormatsOptions) (*ListMetadataFormatsResponse, *HTTPResponse, error) {
 	params := prepareParameters("ListMetadataFormats", map[string]string{
-		"identifier": request.Identifier,
+		"identifier": options.Identifier,
 	})
 
 	response := new(ListMetadataFormatsResponse)
@@ -49,10 +49,10 @@ func (c *Client) Identify() (*IdentifyResponse, *HTTPResponse, error) {
 	return response, httpResponse, err
 }
 
-func (c *Client) GetRecord(request *GetRecordOptions, record interface{}) (*GetRecordResponse, *HTTPResponse, error) {
+func (c *Client) GetRecord(options *GetRecordOptions, record interface{}) (*GetRecordResponse, *HTTPResponse, error) {
 	params := prepareParameters("GetRecord", map[string]string{
-		"identifier":     request.Identifier,
-		"metadataPrefix": request.MetadataPrefix,
+		"identifier":     options.Identifier,
+		"metadataPrefix": options.MetadataPrefix,
 	})
 
 	response := new(GetRecordResponse)
@@ -65,13 +65,13 @@ func (c *Client) GetRecord(request *GetRecordOptions, record interface{}) (*GetR
 	return response, httpResponse, unmarshalRecord(response.Record, record)
 }
 
-func (c *Client) ListRecords(request *ListOptions, records interface{}) (*ListRecordsResponse, *HTTPResponse, error) {
+func (c *Client) ListRecords(options *ListOptions, records interface{}) (*ListRecordsResponse, *HTTPResponse, error) {
 	params := prepareParameters("ListRecords", map[string]string{
-		"metadataPrefix":  request.MetadataPrefix,
-		"from":            formatDateTime(request.From),
-		"until":           formatDateTime(request.Until),
-		"set":             request.Set,
-		"resumptionToken": request.ResumptionToken,
+		"metadataPrefix":  options.MetadataPrefix,
+		"from":            formatDateTime(options.From),
+		"until":           formatDateTime(options.Until),
+		"set":             options.Set,
+		"resumptionToken": options.ResumptionToken,
 	})
 
 	response := new(ListRecordsResponse)
@@ -84,13 +84,13 @@ func (c *Client) ListRecords(request *ListOptions, records interface{}) (*ListRe
 	return response, httpResponse, unmarshalRecords(response.Records, records)
 }
 
-func (c *Client) ListIdentifiers(request *ListOptions) (*ListIdentifiersResponse, *HTTPResponse, error) {
+func (c *Client) ListIdentifiers(options *ListOptions) (*ListIdentifiersResponse, *HTTPResponse, error) {
 	params := prepareParameters("ListIdentifiers", map[string]string{
-		"metadataPrefix":  request.MetadataPrefix,
-		"from":            formatDateTime(request.From),
-		"until":           formatDateTime(request.Until),
-		"set":             request.Set,
-		"resumptionToken": request.ResumptionToken,
+		"metadataPrefix":  options.MetadataPrefix,
+		"from":            formatDateTime(options.From),
+		"until":           formatDateTime(options.Until),
+		"set":             options.Set,
+		"resumptionToken": options.ResumptionToken,
 	})
 
 	response := new(ListIdentifiersResponse)
